@@ -6,7 +6,7 @@ export function useBarcodeScanner() {
   const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState(null);
 
-  const scanImage = useCallback(async (imageElement) => {
+  const scanImage = useCallback(async (imageElement, isLiveVideo = false) => {
     // Only proceed if we have a valid image element with dimensions
     if (!imageElement || (!imageElement.width && !imageElement.videoWidth && !imageElement.naturalWidth)) {
         return [];
@@ -14,7 +14,9 @@ export function useBarcodeScanner() {
   
     setIsScanning(true);
     setError(null);
-    setBarcodes([]);
+    if (!isLiveVideo) {
+      setBarcodes([]);
+    }
 
     try {
       const canvas = document.createElement('canvas');
@@ -72,6 +74,9 @@ export function useBarcodeScanner() {
       }
 
       // No barcodes found
+      if (!isLiveVideo) {
+        setBarcodes([]);
+      }
       setIsScanning(false);
       return [];
 

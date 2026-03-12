@@ -70,7 +70,8 @@ function App() {
   };
 
   const scanVideoFrame = async () => {
-    if (!videoRef.current || !isCameraActive) return;
+    // Drop isCameraActive check to avoid React stale closure issues
+    if (!videoRef.current || !videoRef.current.srcObject) return;
     
     // Only scan if video is playing and has real dimensions
     if (videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA && videoRef.current.videoWidth > 0) {
@@ -82,12 +83,12 @@ function App() {
       // Dibujamos el frame en el canvas
       ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
       
-      // Enviamos el canvas en lugar del elemento de video directo (evita problemas con la API)
-      await scanImage(canvas);
+      // Enviamos el canvas y confirmamos que es live video para evitar parpadeos
+      await scanImage(canvas, true);
     }
     
-    // Request next frame only if camera is still active and we are not scanning too fast
-    if (isCameraActive) {
+    // Request next frame only if camera is still active (srcObject exists)
+    if (videoRef.current && videoRef.current.srcObject) {
       animationFrameRef.current = requestAnimationFrame(() => {
         setTimeout(scanVideoFrame, 800); // scan every 800ms to allow WASM to process
       });
