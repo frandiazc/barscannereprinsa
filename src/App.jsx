@@ -10,7 +10,7 @@ function App() {
   const fileInputRef = useRef(null);
   const animationFrameRef = useRef(null);
   
-  const { barcodes, isScanning, error, scanImage } = useBarcodeScanner();
+  const { barcodes, isScanning, error, scanImage, clearBarcodes } = useBarcodeScanner();
 
   // Handle file selection
   const handleFileChange = async (event) => {
@@ -18,6 +18,7 @@ function App() {
     if (!file) return;
 
     if (isCameraActive) stopCamera();
+    clearBarcodes();
 
     const imageUrl = URL.createObjectURL(file);
     setSelectedImage(imageUrl);
@@ -42,6 +43,7 @@ function App() {
 
   const startCamera = async () => {
     setSelectedImage(null);
+    clearBarcodes();
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
         video: { facingMode: 'environment' } 
@@ -90,7 +92,7 @@ function App() {
     // Request next frame only if camera is still active (srcObject exists)
     if (videoRef.current && videoRef.current.srcObject) {
       animationFrameRef.current = requestAnimationFrame(() => {
-        setTimeout(scanVideoFrame, 800); // scan every 800ms to allow WASM to process
+        setTimeout(scanVideoFrame, 250); // Escanear 4 veces por segundo para atrapar los 3 a la vez
       });
     }
   };

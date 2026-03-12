@@ -6,6 +6,11 @@ export function useBarcodeScanner() {
   const [isScanning, setIsScanning] = useState(false);
   const [error, setError] = useState(null);
 
+  const clearBarcodes = useCallback(() => {
+    setBarcodes([]);
+    setError(null);
+  }, []);
+
   const scanImage = useCallback(async (imageElement, isLiveVideo = false) => {
     // Only proceed if we have a valid image element with dimensions
     if (!imageElement || (!imageElement.width && !imageElement.videoWidth && !imageElement.naturalWidth)) {
@@ -30,6 +35,12 @@ export function useBarcodeScanner() {
       }
       
       const ctx = canvas.getContext('2d');
+      
+      // Aplicar filtros de imagen para mejorar el contraste en vivo (ayuda muchísimo a zxing)
+      if (isLiveVideo) {
+        ctx.filter = 'grayscale(100%) contrast(150%) brightness(110%)';
+      }
+      
       ctx.drawImage(imageElement, 0, 0, canvas.width, canvas.height);
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
 
@@ -64,13 +75,19 @@ export function useBarcodeScanner() {
           };
         });
         
-        // Remove exact duplicates
-        const uniqueCodes = Array.from(new Set(mappedCodes.map(a => a.value)))
-          .map(value => mappedCodes.find(a => a.value === value));
+        // Update barcodes state dynamically, accumulating them if in live video
+        setBarcodes(prevBarcodes => {
+          let combinedCodes = isLiveVideo ? [...prevBarcodes, ...mappedCodes] : mappedCodes;
           
-        setBarcodes(uniqueCodes);
+          // Remove exact duplicates by value
+          const uniqueCodes = Array.from(new Set(combinedCodes.map(a => a.value)))
+            .map(value => combinedCodes.find(a => a.value === value));
+            
+          return uniqueCodes;
+        });
+
         setIsScanning(false);
-        return uniqueCodes;
+        return mappedCodes;
       }
 
       // No barcodes found
@@ -92,6 +109,7 @@ export function useBarcodeScanner() {
     barcodes,
     isScanning,
     error,
-    scanImage
+    scanImage,
+    clearBarcodes
   };
 }
