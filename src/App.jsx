@@ -69,20 +69,29 @@ function App() {
     }
   };
 
-  const scanVideoFrame = () => {
+  const scanVideoFrame = async () => {
     if (!videoRef.current || !isCameraActive) return;
     
-    // Scan every few frames to save performance
-    if (videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA) {
-        // scanImage could be heavy if it runs 60fps, we might want to throttle it
-        // but BarcodeDetector is usually very fast on native
-        scanImage(videoRef.current);
+    // Only scan if video is playing and has real dimensions
+    if (videoRef.current.readyState === videoRef.current.HAVE_ENOUGH_DATA && videoRef.current.videoWidth > 0) {
+      // Usar un canvas temporal para extraer el frame actual del video
+      const canvas = document.createElement('canvas');
+      canvas.width = videoRef.current.videoWidth;
+      canvas.height = videoRef.current.videoHeight;
+      const ctx = canvas.getContext('2d');
+      // Dibujamos el frame en el canvas
+      ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
+      
+      // Enviamos el canvas en lugar del elemento de video directo (evita problemas con la API)
+      await scanImage(canvas);
     }
     
-    // We only request next frame if we are still active
-    animationFrameRef.current = requestAnimationFrame(() => {
-      setTimeout(scanVideoFrame, 500); // scan twice per second
-    });
+    // Request next frame only if camera is still active and we are not scanning too fast
+    if (isCameraActive) {
+      animationFrameRef.current = requestAnimationFrame(() => {
+        setTimeout(scanVideoFrame, 800); // scan every 800ms to allow WASM to process
+      });
+    }
   };
 
   useEffect(() => {

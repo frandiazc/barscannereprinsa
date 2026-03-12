@@ -7,6 +7,11 @@ export function useBarcodeScanner() {
   const [error, setError] = useState(null);
 
   const scanImage = useCallback(async (imageElement) => {
+    // Only proceed if we have a valid image element with dimensions
+    if (!imageElement || (!imageElement.width && !imageElement.videoWidth && !imageElement.naturalWidth)) {
+        return [];
+    }
+  
     setIsScanning(true);
     setError(null);
     setBarcodes([]);
@@ -15,6 +20,13 @@ export function useBarcodeScanner() {
       const canvas = document.createElement('canvas');
       canvas.width = imageElement.naturalWidth || imageElement.width || imageElement.videoWidth;
       canvas.height = imageElement.naturalHeight || imageElement.height || imageElement.videoHeight;
+      
+      // Make sure canvas actually generated a size
+      if (canvas.width === 0 || canvas.height === 0) {
+          setIsScanning(false);
+          return [];
+      }
+      
       const ctx = canvas.getContext('2d');
       ctx.drawImage(imageElement, 0, 0, canvas.width, canvas.height);
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
