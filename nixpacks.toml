@@ -1,0 +1,10 @@
+[setup]
+# Forzamos una versión de Node muy estable (20) donde este bug es menos agresivo
+pkgs = ['nodejs_20']
+
+[phases.install]
+# Limpiamos la caché problemática y forzamos la instalación de las dependencias opcionales
+cmds = ['npm cache clean --force', 'npm install --include=optional']
+
+[phases.build]
+cmds = ['npm run build']
