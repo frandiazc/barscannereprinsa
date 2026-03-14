@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import ScanbotSDK from 'scanbot-web-sdk/ui';
+import ScanbotSDK from 'scanbot-web-sdk';
 
 export function useBarcodeScanner() {
   const [barcodes, setBarcodes] = useState([]);
@@ -116,39 +116,28 @@ export function useBarcodeScanner() {
         scannerRef.current.dispose();
       }
 
-      // v8.x API for UI scanner
-      const configuration = new ScanbotSDK.UI.Config.BarcodeScannerScreenConfiguration();
-      configuration.containerId = containerId;
-      configuration.returnBarcodeImage = false;
-      
-      // Hide Scanbot's default UI elements to use our custom UI
-      configuration.topBar = { visible: false };
-      configuration.bottomBar = { visible: false };
-      configuration.userGuidance = { visible: false };
-      // Make finder window transparent or hide it
-      if (configuration.finder) {
-         configuration.finder.visible = false;
-      }
-
-      // Override the callback for handling results
-      configuration.onBarcodesDetected = (result) => {
-        if (result && result.barcodes && result.barcodes.length > 0) {
-           setBarcodes(prev => {
-              const mappedCodes = mapScanbotCodes(result.barcodes);
-              const combined = [...prev, ...mappedCodes];
-              // De-duplicate by value
-              return Array.from(new Set(combined.map(a => a.value)))
-                .map(value => combined.find(a => a.value === value));
-            });
+      // Classical headless API
+      const configuration = {
+        containerId: containerId,
+        returnBarcodeImage: false,
+        onBarcodesDetected: (result) => {
+          if (result && result.barcodes && result.barcodes.length > 0) {
+             setBarcodes(prev => {
+                const mappedCodes = mapScanbotCodes(result.barcodes);
+                const combined = [...prev, ...mappedCodes];
+                // De-duplicate by value
+                return Array.from(new Set(combined.map(a => a.value)))
+                  .map(value => combined.find(a => a.value === value));
+              });
+          }
+        },
+        onError: (err) => {
+          console.error("Scanner error:", err);
+          setError("Error del scanner: " + err.name);
         }
       };
-      
-      configuration.onError = (err) => {
-        console.error("Scanner error:", err);
-        setError("Error del scanner: " + err.name);
-      };
 
-      scannerRef.current = await ScanbotSDK.UI.createBarcodeScanner(configuration);
+      scannerRef.current = await sdkRef.current.createBarcodeScanner(configuration);
       return true;
     } catch (err) {
       console.error("Scanbot Camera Init Error Details:", err);
