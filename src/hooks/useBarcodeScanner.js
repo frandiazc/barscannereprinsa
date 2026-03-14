@@ -116,10 +116,24 @@ export function useBarcodeScanner() {
         scannerRef.current.dispose();
       }
 
-      // Classical headless API
+      // Professional headless scanner configuration
       const configuration = {
         containerId: containerId,
         returnBarcodeImage: false,
+        captureDelay: 500, // Fast re-scan after detection
+        overlay: {
+          visible: true,
+          onBarcodeFound: (code, polygon) => {
+            // AR polygon highlight styling
+            polygon.fill = 'rgba(16, 185, 129, 0.15)';
+            polygon.stroke = '#10b981';
+            polygon.strokeWidth = 2;
+          }
+        },
+        scannerConfiguration: {
+          barcodeFormats: ['CODE_128', 'ITF', 'CODE_39', 'EAN_13', 'QR_CODE'],
+          engineMode: 'NEXT_GEN',
+        },
         onBarcodesDetected: (result) => {
           if (result && result.barcodes && result.barcodes.length > 0) {
              setBarcodes(prev => {
@@ -133,7 +147,7 @@ export function useBarcodeScanner() {
         },
         onError: (err) => {
           console.error("Scanner error:", err);
-          setError("Error del scanner: " + err.name);
+          setError("Error del scanner: " + (err?.message || err?.name));
         }
       };
 
