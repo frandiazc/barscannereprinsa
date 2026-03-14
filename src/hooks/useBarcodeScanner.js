@@ -142,8 +142,9 @@ export function useBarcodeScanner() {
       scannerRef.current = await ScanbotSDK.UI.createBarcodeScanner(configuration);
       return true;
     } catch (err) {
-      console.error("Scanbot Camera Init Error:", err);
-      setError("No se pudo iniciar la cámara con Scanbot. Revisa los permisos.");
+      console.error("Scanbot Camera Init Error Details:", err);
+      const errorMsg = err?.message || err?.name || JSON.stringify(err);
+      setError(`No se pudo iniciar la cámara: ${errorMsg}`);
       return false;
     }
   }, [clearBarcodes, isSdkReady]);
