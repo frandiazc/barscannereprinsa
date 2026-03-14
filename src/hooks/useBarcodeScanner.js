@@ -1,5 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react';
-import ScanbotSDK from 'scanbot-web-sdk/ui2';
+import ScanbotSDK from 'scanbot-web-sdk/ui';
 
 export function useBarcodeScanner() {
   const [barcodes, setBarcodes] = useState([]);
