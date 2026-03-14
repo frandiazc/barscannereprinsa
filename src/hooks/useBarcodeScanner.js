@@ -121,6 +121,15 @@ export function useBarcodeScanner() {
       configuration.containerId = containerId;
       configuration.returnBarcodeImage = false;
       
+      // Hide Scanbot's default UI elements to use our custom UI
+      configuration.topBar = { visible: false };
+      configuration.bottomBar = { visible: false };
+      configuration.userGuidance = { visible: false };
+      // Make finder window transparent or hide it
+      if (configuration.finder) {
+         configuration.finder.visible = false;
+      }
+
       // Override the callback for handling results
       configuration.onBarcodesDetected = (result) => {
         if (result && result.barcodes && result.barcodes.length > 0) {
